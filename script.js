@@ -185,7 +185,7 @@ function initPronounceMode() {
     return;
   }
   const recog = new SpeechRec();
-  recog.lang = 'en-US';
+recog.lang = navigator.language || 'en-US';
   recog.interimResults = false;
   recog.maxAlternatives = 1;
 
