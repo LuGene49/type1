@@ -1,5 +1,3 @@
-// script.js
-
 //—— 共用 TTS 函式 ——
 function speak(text, lang = 'en-US') {
   if (!window.speechSynthesis) return;
@@ -19,6 +17,7 @@ document.getElementById('typing-mode-btn').onclick = () => {
   typingBox.style.display     = 'block';
   initTypingMode();
 };
+
 document.getElementById('pronounce-mode-btn').onclick = () => {
   modeSelection.style.display  = 'none';
   pronounceBox.style.display   = 'block';
@@ -64,8 +63,8 @@ function initTypingMode() {
     const val    = inputEl.value.trim().toLowerCase();
     const target = currentWord.word.toLowerCase();
     if (val === target) {
-      fbEl.textContent = "✅ 正確！";
-      fbEl.style.color = "green";
+      fbEl.textContent   = "✅ 正確！";
+      fbEl.style.color   = "green";
       scoreEl.textContent = ++score;
       practiceCnt++;
       if (!maybeMemoryTest()) {
@@ -93,7 +92,7 @@ function initTypingMode() {
 
   function showMemoryTest(pool) {
     const idx = Math.floor(Math.random() * pool.length);
-    const memoryTarget = pool[idx];
+    const target = pool[idx];
     speak("");
 
     const modal = document.createElement("div");
@@ -101,9 +100,8 @@ function initTypingMode() {
     modal.innerHTML = `
       <div class="test-content">
         <h3>記憶測驗</h3>
-        <p>請輸入英文單字：<br><strong>${memoryTarget.meaning}</strong></p>
-        <input id="test-answer" type="text"
-               placeholder="請輸入英文單字..." autofocus />
+        <p>請輸入英文單字：<br><strong>${target.meaning}</strong></p>
+        <input id="test-answer" type="text" placeholder="請輸入英文單字..." />
         <div id="test-feedback"></div>
       </div>
     `;
@@ -112,48 +110,41 @@ function initTypingMode() {
     const ansEl = modal.querySelector("#test-answer");
     const tfbEl = modal.querySelector("#test-feedback");
     ansEl.focus();
-    ansEl.addEventListener("blur", () =>
-      setTimeout(() => ansEl.focus(), 0)
-    );
+    ansEl.addEventListener("blur", () => setTimeout(() => ansEl.focus(), 0));
 
     ansEl.addEventListener("keyup", e => {
       if (e.key === "Enter") {
-        e.preventDefault();
         const v = ansEl.value.trim().toLowerCase();
-        if (v === memoryTarget.word.toLowerCase()) {
+        if (v === target.word.toLowerCase()) {
           tfbEl.textContent = "✅ 答對了！";
           tfbEl.style.color = "green";
-          setTimeout(closeMemoryTest, 1200);
+          setTimeout(close, 1200);
         } else {
           tfbEl.textContent = "❌ 再試一次或按 Esc 跳過";
           tfbEl.style.color = "red";
-          ansEl.focus();
         }
       }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeMemoryTest();
-      }
+      if (e.key === "Escape") close();
     });
-  }
 
-  function closeMemoryTest() {
-    const m = document.getElementById("memory-test");
-    if (m) m.remove();
-    loadNext();
+    function close() {
+      const m = document.getElementById("memory-test");
+      if (m) m.remove();
+      loadNext();
+    }
   }
 }
 
 //—— 發音錄音檢測 模式 ——
 function initPronounceMode() {
-  const wordEl       = document.getElementById('pronounce-word-display');
-  const resultEl     = document.getElementById('pronounce-result');
-  const startBtn     = document.getElementById('start-rec-btn');
-  const stopBtn      = document.getElementById('stop-rec-btn');
+  const wordEl   = document.getElementById('pronounce-word-display');
+  const resultEl = document.getElementById('pronounce-result');
+  const startBtn = document.getElementById('start-rec-btn');
+  const stopBtn  = document.getElementById('stop-rec-btn');
   let audioCtx, analyser, dataArray, rafId;
-  let targetWordObj;
+  let targetObj;
 
-  // 建立音量表 UI
+  // 建立音量表
   const meterContainer = document.createElement('div');
   meterContainer.style.cssText =
     'margin-top:10px;width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden;';
@@ -162,37 +153,36 @@ function initPronounceMode() {
   meterContainer.appendChild(meterLevel);
   stopBtn.parentNode.insertBefore(meterContainer, stopBtn.nextSibling);
 
-  // 隨機取單字、顯示單字＋音標並由電腦朗讀一次
+  // 換題並 TTS
   function pickWord() {
-    targetWordObj = words[Math.floor(Math.random() * words.length)];
-    const phon = targetWordObj.phonetic || '';
+    targetObj = words[Math.floor(Math.random() * words.length)];
+    const phon = targetObj.phonetic || '';
     wordEl.innerHTML = `
-      <div style="font-size:2rem;font-weight:bold;">${targetWordObj.word}</div>
+      <div style="font-size:2rem;font-weight:bold;">${targetObj.word}</div>
       <div class="phonetic" style="font-size:1.4rem;color:#555;">${phon}</div>
     `;
     resultEl.textContent = '';
     meterLevel.style.width = '0';
-    // 稍作延遲，等畫面更新後再播放
-    setTimeout(() => speak(targetWordObj.word), 300);
+    setTimeout(() => speak(targetObj.word), 300);
   }
   pickWord();
 
-  // 檢查 SpeechRecognition 支援
+  // 檢查支援度
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRec) {
     resultEl.textContent = '❌ 此瀏覽器不支援語音辨識';
     startBtn.disabled = true;
     return;
   }
+
   const recog = new SpeechRec();
-recog.lang = navigator.language || 'en-US';
+  recog.lang = 'en-US';
   recog.interimResults = false;
   recog.maxAlternatives = 1;
 
-  // 開始錄音：請求權限、開始錄音並啟動音量表
   startBtn.onclick = () => {
-    resultEl.textContent = '';  // 清除舊提示
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    resultEl.textContent = '';
+    if (!navigator.mediaDevices?.getUserMedia) {
       resultEl.textContent = '❌ 此瀏覽器不支援麥克風存取';
       return;
     }
@@ -203,7 +193,6 @@ recog.lang = navigator.language || 'en-US';
         resultEl.textContent = '錄音中⋯ 請跟讀單字';
         stopBtn.disabled = false;
 
-        // Web Audio API：串流接入 AnalyserNode
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const source = audioCtx.createMediaStreamSource(stream);
         analyser = audioCtx.createAnalyser();
@@ -211,21 +200,15 @@ recog.lang = navigator.language || 'en-US';
         dataArray = new Uint8Array(analyser.frequencyBinCount);
         source.connect(analyser);
 
-        // 繪製音量表
         (function drawMeter() {
           analyser.getByteTimeDomainData(dataArray);
           let sum = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            const d = dataArray[i] - 128;
-            sum += d * d;
-          }
+          dataArray.forEach(d => sum += (d - 128) ** 2);
           const rms = Math.sqrt(sum / dataArray.length);
-          const pct = Math.min(1, rms / 128);
-          meterLevel.style.width = (pct * 100) + '%';
+          meterLevel.style.width = `${Math.min(1, rms/128) * 100}%`;
           rafId = requestAnimationFrame(drawMeter);
         })();
 
-        // 啟動語音辨識
         recog.start();
       })
       .catch(err => {
@@ -233,52 +216,71 @@ recog.lang = navigator.language || 'en-US';
         startBtn.disabled = false;
         resultEl.textContent =
           err.name === 'NotAllowedError'
-          ? '❌ 權限被拒絕，請允許麥克風'
-          : `❌ 取用麥克風失敗：${err.name}`;
+            ? '❌ 權限被拒絕，請允許麥克風'
+            : `❌ 取用麥克風失敗：${err.name}`;
       });
   };
 
-  // 停止錄音：結束辨識、停止音量表
   stopBtn.onclick = () => {
     recog.stop();
     stopBtn.disabled = true;
     cancelAnimationFrame(rafId);
     if (audioCtx) audioCtx.close();
     meterLevel.style.width = '0';
-    stopBtn.onclick = () => {
-  recog.stop();
-  stopBtn.disabled = true;
-  cancelAnimationFrame(rafId);
-  if (audioCtx) audioCtx.close();
-  meterLevel.style.width = '0';
-
-  resultEl.textContent = '🔇 錄音已停止，您可以再試一次或按「開始錄音」';
-};
-
   };
 
-  // 辨識結果：正確才換下一題，不正確則維持同題
   recog.onresult = e => {
     const spoken = e.results[0][0].transcript.trim().toLowerCase();
-    const target = targetWordObj.word.toLowerCase();
+    const target = targetObj.word.toLowerCase();
     if (spoken === target) {
       resultEl.innerHTML = `✅ 發音正確！<br><em>${spoken}</em>`;
-      stopBtn.onclick();
       setTimeout(pickWord, 1000);
     } else {
       resultEl.innerHTML = `❌ 發音不符，請再試一次<br><em>${spoken}</em>`;
-      stopBtn.onclick();
     }
   };
 
   recog.onerror = ev => {
     console.error('SpeechRec error', ev.error);
-    resultEl.textContent = `⚠️ 辨識錯誤：${ev.error}`;
-    stopBtn.onclick();
+    resultEl.textContent =
+      ev.error === 'language-not-supported'
+        ? '⚠️ 不支援此語言，請更換瀏覽器'
+        : `⚠️ 辨識錯誤：${ev.error}`;
   };
 
+  // 停止錄音、辨識結束後顯示提示
   recog.onend = () => {
     startBtn.disabled = false;
     stopBtn.disabled  = true;
+    resultEl.textContent = '🔇 錄音已停止，您可以再試一次或按「開始錄音」';
   };
 }
+  // 辨識結果處理
+  recog.onresult = e => {
+    const spoken = e.results[0][0].transcript.trim().toLowerCase();
+    const target = targetObj.word.toLowerCase();
+    if (spoken === target) {
+      resultEl.innerHTML = `✅ 發音正確！<br><em>${spoken}</em>`;
+      setTimeout(pickWord, 1000);
+    } else {
+      resultEl.innerHTML = `❌ 發音不符，請再試一次<br><em>${spoken}</em>`;
+    }
+  };
+
+  // 辨識錯誤處理
+  recog.onerror = ev => {
+    console.error('SpeechRec error', ev.error);
+    resultEl.textContent =
+      ev.error === 'language-not-supported'
+        ? '⚠️ 不支援此語言，請更換瀏覽器'
+        : `⚠️ 辨識錯誤：${ev.error}`;
+  };
+
+  // 停止錄音、辨識結束後顯示提示
+  recog.onend = () => {
+    startBtn.disabled = false;
+    stopBtn.disabled  = true;
+    resultEl.textContent = '🔇 錄音已停止，您可以再試一次或按「開始錄音」';
+  };
+
+} // end of initPronounceMode()
