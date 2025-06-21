@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>單字練習切換模式</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- test -->
+  <!-- A. 模式選擇 -->
+  
+  <div id="mode-selection" class="mode-box">
+    <h2>請選擇練習模式</h2>
+    <button id="typing-mode-btn" class="mode-btn">英打練習模式</button>
+    <button id="pronounce-mode-btn" class="mode-btn">發音錄音檢測模式</button>
+  </div>
+
+  <!-- B. 英打＋記憶測驗介面 -->
+  <div id="typing-container" class="container" style="display:none;">
+    <header>
+      <h1>英打單字記憶練習</h1>
+      <div id="score">分數: <span>0</span></div>
+    </header>
+    <main>
+      <div class="word-section">
+        <div id="word-display">準備中...</div>
+        <div class="phonetic" id="phonetic-display"></div>
+      </div>
+      <div class="meaning-section">
+        <div id="meaning"></div>
+        <div id="example"></div>
+      </div>
+      <div class="input-section">
+        <input type="text" id="typing-input" placeholder="請輸入上方單字..." />
+        <div id="feedback"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- C. 發音錄音檢測介面 -->
+  <div id="pronounce-container" class="container" style="display:none;">
+    <header>
+      <h1>單字發音錄音檢測</h1>
+    </header>
+    <main class="pronounce-main">
+      <div id="pronounce-word-display">按下「🎤 開始錄音」取得單字</div>
+      <button id="start-rec-btn" class="mode-btn">🎤 開始錄音</button>
+      <button id="stop-rec-btn" class="mode-btn" disabled>⏹ 停止錄音</button>
+      <div id="pronounce-result"></div>
+    </main>
+  </div>
+
+  <!-- 詞庫 -->
+  <script src="vocab.js"></script>
+  <!-- 主邏輯 -->
+  <script src="script.js"></script>
+</body>
+</html>
