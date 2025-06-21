@@ -245,6 +245,16 @@ function initPronounceMode() {
     cancelAnimationFrame(rafId);
     if (audioCtx) audioCtx.close();
     meterLevel.style.width = '0';
+    stopBtn.onclick = () => {
+  recog.stop();
+  stopBtn.disabled = true;
+  cancelAnimationFrame(rafId);
+  if (audioCtx) audioCtx.close();
+  meterLevel.style.width = '0';
+
+  resultEl.textContent = '🔇 錄音已停止，您可以再試一次或按「開始錄音」';
+};
+
   };
 
   // 辨識結果：正確才換下一題，不正確則維持同題
