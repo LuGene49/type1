@@ -28,7 +28,6 @@ function initTypingMode() {
   /* ...（此處保留你原本的 initTypingMode 實作）... */
 }
 
-//—— 發音錄音檢測 模式 ——
 function initPronounceMode() {
   const wordEl   = document.getElementById('pronounce-word-display');
   const resultEl = document.getElementById('pronounce-result');
@@ -38,22 +37,20 @@ function initPronounceMode() {
   let audioCtx, analyser, dataArray, rafId;
   let targetWordObj;
 
-  // 建立「音量表」
+  // 建立音量表
   const meterContainer = document.createElement('div');
   meterContainer.style.cssText =
-    'margin-top:10px;width:100%;height:8px;overflow:hidden;border-radius:4px;background:#eee;';
+    'margin-top:10px;width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden;';
   const meterLevel = document.createElement('div');
   meterLevel.style.cssText = 'width:0;height:100%;background:#4a69bd;';
   meterContainer.appendChild(meterLevel);
   stopBtn.parentNode.insertBefore(meterContainer, stopBtn.nextSibling);
 
-  // 選字並 TTS
+  // 隨機取單字並 TTS
   function pickWord() {
     targetWordObj = words[Math.floor(Math.random() * words.length)];
     wordEl.innerHTML = `
-      <div style="font-size:2rem;font-weight:bold;">
-        ${targetWordObj.word}
-      </div>
+      <div style="font-size:2rem;font-weight:bold;">${targetWordObj.word}</div>
       <div class="phonetic" style="font-size:1.4rem;color:#555;">
         ${targetWordObj.phonetic || ''}
       </div>
@@ -64,7 +61,7 @@ function initPronounceMode() {
   }
   pickWord();
 
-  // 檢查瀏覽器支援
+  // 檢查支援度
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRec) {
     resultEl.textContent = '❌ 此瀏覽器不支援語音辨識';
@@ -85,13 +82,11 @@ function initPronounceMode() {
     }
     startBtn.disabled = true;
     resultEl.textContent = '請允許麥克風…';
-
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
         resultEl.textContent = '錄音中⋯ 請跟讀單字';
         stopBtn.disabled = false;
 
-        // Web Audio API：串流＋AnalyserNode
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const source = audioCtx.createMediaStreamSource(stream);
         analyser = audioCtx.createAnalyser();
@@ -99,7 +94,6 @@ function initPronounceMode() {
         dataArray = new Uint8Array(analyser.frequencyBinCount);
         source.connect(analyser);
 
-        // 繪製音量表
         (function drawMeter() {
           analyser.getByteTimeDomainData(dataArray);
           let sum = 0;
@@ -151,7 +145,7 @@ function initPronounceMode() {
         : `⚠️ 辨識錯誤：${ev.error}`;
   };
 
-  // 辨識（或手動停止）結束後顯示提示
+  // —— 新增：辨識結束後顯示停止提示 ——  
   recog.onend = () => {
     startBtn.disabled = false;
     stopBtn.disabled  = true;
